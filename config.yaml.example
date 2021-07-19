@@ -1,0 +1,10 @@
+accounts:
+  - username: ""
+    password: ""
+    feiShuWebHook: ""
+    robotKey: ""
+    openID: ""
+feiShu:
+  AppID: ""
+  AppSecret: ""
+  AccessToken: ""
