@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	defaultClient = &http.Client{
+	larkDefaultClient = &http.Client{
 		Timeout: 10 * time.Second,
 		Transport: func() http.RoundTripper {
 			transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -99,7 +99,7 @@ func SendMsgToRobot(ctx context.Context, ac *Account, msg Msg) error {
 }
 
 func SendMsgToWebHook(ctx context.Context, ac *Account, msg Msg) error {
-	resp, err := resty.NewWithClient(defaultClient).R().SetContext(ctx).
+	resp, err := resty.NewWithClient(larkDefaultClient).R().SetContext(ctx).
 		SetBody(msg).
 		SetResult(new(MsgResp)).
 		Post(ac.FeiShuWebHook)
@@ -140,7 +140,7 @@ func InitRobots(c *cfg) {
 			continue
 		}
 		r := &Robot{
-			client:    resty.NewWithClient(defaultClient),
+			client:    resty.NewWithClient(larkDefaultClient),
 			appID:     v.AppID,
 			appSecret: v.AppSecret,
 		}
