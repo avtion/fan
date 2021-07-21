@@ -1,5 +1,20 @@
 package main
 
+//‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+// 目标URL
+//_______________________________________________________________________
+
+const (
+	BaseHost       = "https://meican.com"
+	LoginURL       = BaseHost + "/preference/preorder/api/v2.0/oauth/token"
+	OrderURL       = BaseHost + "/preorder/api/v2.1/calendaritems/list"
+	RestaurantsAPI = BaseHost + "/preorder/api/v2.1/restaurants/list"
+)
+
+//‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+// 响应结构体
+//_______________________________________________________________________
+
 type LoginResp struct {
 	AccessToken       string `json:"access_token"`
 	TokenType         string `json:"token_type"`
