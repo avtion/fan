@@ -13,6 +13,27 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	accessTokenAPI = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/"
+	msgAPI         = "https://open.feishu.cn/open-apis/message/v4/send/"
+)
+
+var (
+	defaultClient = &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: func() http.RoundTripper {
+			transport := http.DefaultTransport.(*http.Transport).Clone()
+			transport.MaxIdleConns = 100
+			transport.MaxConnsPerHost = 100
+			transport.MaxIdleConnsPerHost = 100
+			return transport
+		}(),
+	}
+
+	ErrParamsAreNil  = errors.New("account or msg is nil")
+	ErrSendMsgFailed = errors.New("send msg failed")
+)
+
 type (
 	// Msg 消息抽象
 	Msg interface {
@@ -27,18 +48,6 @@ type (
 			MessageId string `json:"message_id"`
 		} `json:"data"`
 	}
-)
-
-const (
-	accessTokenAPI = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/"
-	msgAPI         = "https://open.feishu.cn/open-apis/message/v4/send/"
-)
-
-var (
-	defaultClient = &http.Client{}
-
-	ErrParamsAreNil  = errors.New("account or msg is nil")
-	ErrSendMsgFailed = errors.New("send msg failed")
 )
 
 func SendMsg(ctx context.Context, account *Account, msg Msg) error {
@@ -90,7 +99,7 @@ func SendMsgToRobot(ctx context.Context, ac *Account, msg Msg) error {
 }
 
 func SendMsgToWebHook(ctx context.Context, ac *Account, msg Msg) error {
-	resp, err := resty.NewWithClient(defaultClient).SetTimeout(10 * time.Second).R().SetContext(ctx).
+	resp, err := resty.NewWithClient(defaultClient).R().SetContext(ctx).
 		SetBody(msg).
 		SetResult(new(MsgResp)).
 		Post(ac.FeiShuWebHook)
