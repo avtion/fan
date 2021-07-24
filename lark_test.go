@@ -5,10 +5,6 @@ import (
 	"testing"
 )
 
-func init() {
-	InitMsgTest()
-}
-
 func InitMsgTest() {
 	InitCfg()
 	if len(globalCfg.Accounts) == 0 {
@@ -25,12 +21,14 @@ func getAc() *Account {
 }
 
 func Test_TextMsg(t *testing.T) {
+	InitMsgTest()
 	if err := SendMsg(context.Background(), getAc(), NewTextMsg("恰饭")); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func Test_MarkdownMsg(t *testing.T) {
+	InitMsgTest()
 	msg := NewMarkdownMsg("午饭提醒",
 		[]*Div{{Tag: "text", Text: "今天的午饭是"}},
 		[]*Div{{Tag: "a", Text: "铁板黑椒鸡扒饭套餐", Href: "https://www.example.com/"}},
@@ -42,6 +40,7 @@ func Test_MarkdownMsg(t *testing.T) {
 }
 
 func Test_CardMsg(t *testing.T) {
+	InitMsgTest()
 	msg := NewCardMsg(NewCardHeader("星期一午饭提醒", HeaderColorSuccess)).
 		AddContents("主人&sim;今天是 **星期一** 啦！", "这是今天的午饭哦&sim;要按时吃饭！不然……不然就吃我！").
 		AddAction(NewCardAction(actionTypePrimary, "🍗 铁板黑椒鸡扒饭套餐", "https://www.baidu.com/")).
