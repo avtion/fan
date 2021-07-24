@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"time"
@@ -21,6 +22,10 @@ var apiDefaultClient = &http.Client{
 		transport.MaxConnsPerHost = 100
 		transport.MaxIdleConnsPerHost = 100
 		return transport
+	}(),
+	Jar: func() http.CookieJar {
+		jar, _ := cookiejar.New(nil)
+		return jar
 	}(),
 }
 
@@ -73,7 +78,7 @@ func (a *Api) Login(username, password string) error {
 
 	// 判断登录是否成功
 	if resp.StatusCode() != http.StatusOK {
-		log.Error("login failed", zap.ByteString("元数据", resp.Body()))
+		log.Error("login failed", zap.ByteString("raw", resp.Body()))
 		return errors.New("login failed")
 	}
 
@@ -103,5 +108,6 @@ func (a *Api) GetOrders(begin, end time.Time) (*Orders, error) {
 		log.Error("get orders failed", zap.ByteString("raw", resp.Body()))
 		return nil, errors.New("get orders failed")
 	}
+	log.Info("get orders info successfully", zap.ByteString("raw", resp.Body()))
 	return resp.Result().(*Orders), nil
 }

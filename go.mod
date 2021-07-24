@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/go-resty/resty/v2 v2.6.0
+	github.com/golang-module/carbon v1.4.4 // indirect
 	github.com/google/gops v0.3.19
 	github.com/json-iterator/go v1.1.11
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
