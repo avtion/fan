@@ -9,6 +9,7 @@ type (
 	cfg struct {
 		Accounts []*Account
 		FeiShu   map[string]*FeiShu
+		Msg      *MsgTemplate
 	}
 
 	// Account 干饭账号配置
@@ -20,6 +21,15 @@ type (
 	// FeiShu 飞书机器人配置
 	FeiShu struct {
 		AppID, AppSecret string
+	}
+
+	MsgTemplate struct {
+		AppName        string   // 应用自称
+		Lunch          string   // 午饭
+		Dinner         string   // 晚饭
+		OrderClosed    []string // 错过下单时间
+		OrderAvailable []string // 需要下单的提示
+		OrderSuccess   []string // 下单成功
 	}
 )
 
@@ -68,4 +78,9 @@ func printConfig(c *cfg) {
 			zap.String("secret", v.AppSecret),
 		)
 	}
+
+	// 语录
+	log.Sugar().Infof("名字: %s | 午饭: %s | 晚饭: %s | 错过下单时间: %d | 等待下单: %d | 已经下单: %d",
+		c.Msg.AppName, c.Msg.Lunch, c.Msg.Dinner,
+		len(c.Msg.OrderClosed), len(c.Msg.OrderAvailable), len(c.Msg.OrderAvailable))
 }
