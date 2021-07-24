@@ -23,6 +23,10 @@ type LoginResp struct {
 	NeedResetPassword bool   `json:"need_reset_password"`
 }
 
+//‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+// 订单查询
+//_______________________________________________________________________
+
 type (
 	// Orders 订单
 	Orders struct {
@@ -134,6 +138,12 @@ const (
 	OrderStatusOrder     OrderStatus = "ORDER"     // 已经点餐
 	OrderStatusAvailable OrderStatus = "AVAILABLE" // 开放点餐
 )
+
+var _ = []OrderStatus{OrderStatusClosed, OrderStatusOrder, OrderStatusAvailable}
+
+//‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+// 下单
+//_______________________________________________________________________
 
 // Restaurants 餐厅
 type Restaurants struct {
