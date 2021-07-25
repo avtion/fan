@@ -30,20 +30,24 @@ type LoginResp struct {
 type (
 	// Orders 订单
 	Orders struct {
-		StartDate string `json:"startDate"` // 开始时间
-		EndDate   string `json:"endDate"`   // 结束时间
-		DateList  []struct {
-			Date             string `json:"date"` // 日期
-			CalendarItemList []struct {
-				TargetTime    int64          `json:"targetTime"` // 目标时间 eg.1625445000000
-				Title         string         `json:"title"`      // 描述
-				Status        string         `json:"status"`
-				Reason        string         `json:"reason"`
-				UserTab       *UserTab       `json:"userTab"`
-				OpeningTime   *OpeningTime   `json:"openingTime"`
-				CorpOrderUser *CorpOrderUser `json:"corpOrderUser"`
-			} `json:"calendarItemList"`
-		} `json:"dateList"`
+		StartDate string      `json:"startDate"` // 开始时间
+		EndDate   string      `json:"endDate"`   // 结束时间
+		DateList  []*DateItem `json:"dateList"`
+	}
+
+	DateItem struct {
+		Date             string          `json:"date"` // 日期
+		CalendarItemList []*CalendarItem `json:"calendarItemList"`
+	}
+
+	CalendarItem struct {
+		TargetTime    int64          `json:"targetTime"` // 目标时间 eg.1625445000000
+		Title         string         `json:"title"`      // 描述
+		Status        string         `json:"status"`
+		Reason        string         `json:"reason"`
+		UserTab       *UserTab       `json:"userTab"`
+		OpeningTime   *OpeningTime   `json:"openingTime"`
+		CorpOrderUser *CorpOrderUser `json:"corpOrderUser"`
 	}
 
 	// OpeningTime 预定时间
