@@ -1,2 +1,5 @@
 # local config file
-/config.yaml
+.idea
+config.yaml
+go.sum
+order_test.txt
