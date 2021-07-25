@@ -16,7 +16,7 @@ func InitMsgTest() {
 	}
 }
 
-func getAc() *Account {
+func getAc() *account {
 	return globalCfg.Accounts[0]
 }
 

@@ -46,7 +46,7 @@ type (
 	}
 )
 
-func SendMsg(ctx context.Context, account *Account, msg Msg) error {
+func SendMsg(ctx context.Context, account *account, msg Msg) error {
 	if account == nil || msg == nil {
 		return ErrParamsAreNil
 	}
@@ -62,13 +62,17 @@ func SendMsg(ctx context.Context, account *Account, msg Msg) error {
 	return SendMsgToWebHook(ctx, account, msg)
 }
 
-func SendMsgToRobot(ctx context.Context, ac *Account, msg Msg) error {
+func SendMsgToRobot(ctx context.Context, ac *account, msg Msg) error {
 	if ac.FeiShuRobot == "" {
 		return errors.New("account no robot")
 	}
 	r, isExist := robotMapping[ac.FeiShuRobot]
 	if !isExist {
 		return errors.New("system no robot")
+	}
+	// 获取一次密钥
+	if err := r.getAccessToken(ctx); err != nil {
+		return err
 	}
 	resp, err := r.client.R().SetContext(ctx).
 		SetAuthToken(r.accessToken).
@@ -94,7 +98,7 @@ func SendMsgToRobot(ctx context.Context, ac *Account, msg Msg) error {
 	return nil
 }
 
-func SendMsgToWebHook(ctx context.Context, ac *Account, msg Msg) error {
+func SendMsgToWebHook(ctx context.Context, ac *account, msg Msg) error {
 	resp, err := resty.NewWithClient(larkDefaultClient).R().SetContext(ctx).
 		SetBody(msg).
 		SetResult(new(MsgResp)).
@@ -144,7 +148,7 @@ func InitRobots(c *cfg) {
 			robotMapping[k] = r
 		}
 	}
-	log.Info("init robot successfully")
+	log.Info("机器人初始化完毕")
 }
 
 type (
@@ -398,26 +402,12 @@ func (c *CardMsg) AddNotes(notes ...string) *CardMsg {
 	}
 
 	// 如果没有的话就追加一下
-	c.Card.Elements = append(c.Card.Elements, &CardLine{Tag: "note", Elements: divs})
+	c.Card.Elements = append(c.Card.Elements, &CardLine{Tag: "hr"}, &CardLine{Tag: "note", Elements: divs})
 	return c
 }
 
 // AddAction 新增操作按钮
 func (c *CardMsg) AddAction(actions ...*CardAction) *CardMsg {
-	// 找一下有没有action操作模块
-	var isAlready bool
-	for _, line := range c.Card.Elements {
-		if line.Tag == "action" {
-			line.Actions = append(line.Actions, actions...)
-			isAlready = true
-			break
-		}
-	}
-	if isAlready {
-		return c
-	}
-
-	// 如果没有的话就追加一下
 	c.Card.Elements = append(c.Card.Elements, &CardLine{Tag: "action", Actions: actions})
 	return c
 }
