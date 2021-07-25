@@ -3,6 +3,7 @@ module github.com/avtion/fan
 go 1.16
 
 require (
+	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/golang-module/carbon v1.4.4
 	github.com/google/gops v0.3.19

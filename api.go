@@ -50,7 +50,7 @@ func NewAPI(ctx context.Context, httpClient *http.Client) *Api {
 		client: resty.NewWithClient(httpClient).SetQueryParams(map[string]string{
 			"client_id":     "Xqr8w0Uk4ciodqfPwjhav5rdxTaYepD",
 			"client_secret": "vD11O6xI9bG3kqYRu9OyPAHkRGxLh4E",
-		}),
+		}).SetRetryCount(3),
 	}
 }
 

@@ -140,7 +140,7 @@ func InitRobots(c *cfg) {
 			continue
 		}
 		r := &Robot{
-			client:    resty.NewWithClient(larkDefaultClient),
+			client:    resty.NewWithClient(larkDefaultClient).SetRetryCount(3),
 			appID:     v.AppID,
 			appSecret: v.AppSecret,
 		}
