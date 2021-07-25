@@ -16,7 +16,7 @@ import (
 
 func init() {
 	if err := agent.Listen(agent.Options{}); err != nil {
-		log.Error("gops agent run failed", zap.Error(err))
+		log.Error("gops客户端初始化失败", zap.Error(err))
 		return
 	}
 }
@@ -38,13 +38,10 @@ func initTimezone() error {
 func main() {
 	InitCfg()
 	InitRobots(globalCfg)
-	if err := initTimezone(); err != nil {
-		log.Error("init timezone failed", zap.Error(err))
-		return
-	}
+	_ = initTimezone()
 	if len(globalCfg.Accounts) == 0 {
-		log.Error("cfg no accounts")
-		return
+		log.Error("警告: 没有加载账号", zap.Any("配置", globalCfg))
+		// return 不退出程序
 	}
 	ctx := context.Background()
 
