@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	jsoniter "github.com/json-iterator/go"
 	"go.uber.org/zap"
 )
 
@@ -54,7 +53,7 @@ func SendMsg(ctx context.Context, account *Account, msg Msg) error {
 
 	// 如果该用户使用自建应用机器人
 	if _, isExist := globalCfg.FeiShu[account.FeiShuRobot]; isExist {
-		if err := SendMsgToRobot(ctx, account, msg); err == nil {
+		if err := SendMsgToRobot(ctx, account, msg); err == nil && !account.EnableAllRobot {
 			return nil
 		}
 		// 降级处理 - 使用webhook发送通知
@@ -96,8 +95,6 @@ func SendMsgToRobot(ctx context.Context, ac *Account, msg Msg) error {
 }
 
 func SendMsgToWebHook(ctx context.Context, ac *Account, msg Msg) error {
-	dataBytes, _ := jsoniter.Marshal(msg)
-	log.Info("", zap.ByteString("raw", dataBytes))
 	resp, err := resty.NewWithClient(larkDefaultClient).R().SetContext(ctx).
 		SetBody(msg).
 		SetResult(new(MsgResp)).
