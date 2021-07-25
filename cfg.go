@@ -59,6 +59,8 @@ var globalCfg = new(cfg)
 func InitCfg() {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("$HOME")
+	viper.AddConfigPath("/etc")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Panic("load config failed", zap.Error(err))
 		return
