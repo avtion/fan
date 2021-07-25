@@ -1,9 +1,22 @@
+timezone: Asia/Shanghai
+push:
+  lunch:
+    - "0 0 8 * * *"
+    - "0 50 11 * * *"
+  dinner:
+    - "0 0 15 * * *"
+    - "0 50 18 * * *"
+  preOrder:
+    - "0 0 20,21 * * *"
 accounts:
   - username: ""
     password: ""
     feiShuWebHook: ""
     robotKey: ""
     openID: ""
+    enableAllRobot: true
+    enableWeekendPass: true
+    enableWeekendGreeting: false
 feiShu:
   AppID: ""
   AppSecret: ""

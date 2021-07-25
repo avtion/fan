@@ -1,32 +1,37 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
 type (
 	cfg struct {
-		Accounts []*Account
-		FeiShu   map[string]*FeiShu
-		Msg      *MsgTemplate
+		Timezone string // eg.Asia/Shanghai
+		Accounts []*account
+		FeiShu   map[string]*feiShu
+		Msg      *msgTemplate
+		Push     *push
 	}
 
-	// Account 干饭账号配置
-	Account struct {
+	// account 干饭账号配置
+	account struct {
 		Username, Password                 string
 		FeiShuWebHook, FeiShuRobot, OpenID string
 		EnableAllRobot                     bool // 启用所有机器人发送消息
-		DisableWeekendPass                 bool // 关闭周末提醒跳过
+		EnableWeekendPass                  bool // 启用周末提醒跳过
 		EnableWeekendGreeting              bool // 启用周末问候消息
 	}
 
-	// FeiShu 飞书机器人配置
-	FeiShu struct {
+	// feiShu 飞书机器人配置
+	feiShu struct {
 		AppID, AppSecret string
 	}
 
-	MsgTemplate struct {
+	// 消息卡片模板参数
+	msgTemplate struct {
 		AppName        string   // 应用自称
 		Lunch          string   // 午饭
 		Dinner         string   // 晚饭
@@ -34,6 +39,19 @@ type (
 		OrderAvailable []string // 需要下单的提示
 		OrderSuccess   []string // 下单成功
 	}
+
+	// 推送设置
+	push struct {
+		Lunch    []string // 午餐消息
+		Dinner   []string // 晚餐消息
+		PreOrder []string // 预定消息
+	}
+)
+
+var (
+	pushDefaultLunch    = []string{"0 0 8 * * *", "0 50 11 * * *"}
+	pushDefaultDinner   = []string{"0 0 15 * * *", "0 50 18 * * *"}
+	pushDefaultPreOrder = []string{"0 0 20,21 * * *"}
 )
 
 var globalCfg = new(cfg)
@@ -48,6 +66,15 @@ func InitCfg() {
 	if err := viper.Unmarshal(globalCfg); err != nil {
 		log.Panic("load config failed", zap.Error(err))
 		return
+	}
+	if globalCfg.Push == nil {
+		globalCfg.Push = &push{
+			Lunch:    pushDefaultLunch,
+			Dinner:   pushDefaultDinner,
+			PreOrder: pushDefaultPreOrder,
+		}
+	} else {
+		globalCfg.Push.init()
 	}
 
 	// debug print
@@ -72,10 +99,10 @@ func printConfig(c *cfg) {
 		)
 	}
 
-	// FeiShu
+	// feiShu
 	for k, v := range c.FeiShu {
 		log.Info(
-			"FeiShu Robot info",
+			"feiShu Robot info",
 			zap.String("key", k),
 			zap.String("id", v.AppID),
 			zap.String("secret", v.AppSecret),
@@ -86,4 +113,23 @@ func printConfig(c *cfg) {
 	log.Sugar().Infof("名字: %s | 午饭: %s | 晚饭: %s | 错过下单时间: %d | 等待下单: %d | 已经下单: %d",
 		c.Msg.AppName, c.Msg.Lunch, c.Msg.Dinner,
 		len(c.Msg.OrderClosed), len(c.Msg.OrderAvailable), len(c.Msg.OrderAvailable))
+
+	// 推送时间设置
+	log.Sugar().Infof("推送时间设置 | 午餐: %s | 晚餐: %s | 预定提醒: %s",
+		strings.Join(c.Push.Lunch, ","),
+		strings.Join(c.Push.Dinner, ","),
+		strings.Join(c.Push.PreOrder, ","),
+	)
+}
+
+func (p *push) init() {
+	if len(p.Lunch) == 0 {
+		p.Lunch = append(p.Lunch, pushDefaultLunch...)
+	}
+	if len(p.Dinner) == 0 {
+		p.Dinner = append(p.Dinner, pushDefaultDinner...)
+	}
+	if len(p.PreOrder) == 0 {
+		p.PreOrder = append(p.PreOrder, pushDefaultPreOrder...)
+	}
 }
