@@ -112,6 +112,6 @@ func (a *Api) GetOrders(begin, end time.Time) (*Orders, error) {
 		log.Error("get orders failed", zap.ByteString("raw", resp.Body()))
 		return nil, errors.New("get orders failed")
 	}
-	log.Info("get orders info successfully", zap.ByteString("raw", resp.Body()))
+	log.Info("get orders info successfully")
 	return resp.Result().(*Orders), nil
 }
