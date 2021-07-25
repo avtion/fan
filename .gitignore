@@ -1,5 +1,4 @@
 # local config file
 .idea
 config.yaml
-go.sum
 order_test.txt
