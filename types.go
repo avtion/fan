@@ -236,3 +236,17 @@ type Dishes struct {
 	UniqueId   string `json:"uniqueId"`
 	Warning    string `json:"warning"`
 }
+
+//‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+// 午餐、晚餐标识
+//_______________________________________________________________________
+
+type DishType = uint
+
+const (
+	DishTypeUndefined DishType = iota
+	DishTypeLunch              // 午餐
+	DishTypeDinner             // 晚餐
+)
+
+var _ = []DishType{DishTypeLunch, DishTypeDinner}
