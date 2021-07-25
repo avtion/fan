@@ -14,19 +14,23 @@ import (
 	"go.uber.org/zap"
 )
 
-var apiDefaultClient = &http.Client{
-	Timeout: 10 * time.Second,
-	Transport: func() http.RoundTripper {
-		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.MaxIdleConns = 100
-		transport.MaxConnsPerHost = 100
-		transport.MaxIdleConnsPerHost = 100
-		return transport
-	}(),
-	Jar: func() http.CookieJar {
-		jar, _ := cookiejar.New(nil)
-		return jar
-	}(),
+var apiDefaultClient = NewHTTPClient()
+
+func NewHTTPClient() *http.Client {
+	return &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: func() http.RoundTripper {
+			transport := http.DefaultTransport.(*http.Transport).Clone()
+			transport.MaxIdleConns = 100
+			transport.MaxConnsPerHost = 100
+			transport.MaxIdleConnsPerHost = 100
+			return transport
+		}(),
+		Jar: func() http.CookieJar {
+			jar, _ := cookiejar.New(nil)
+			return jar
+		}(),
+	}
 }
 
 type Api struct {
