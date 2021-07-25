@@ -16,6 +16,9 @@ type (
 	Account struct {
 		Username, Password                 string
 		FeiShuWebHook, FeiShuRobot, OpenID string
+		EnableAllRobot                     bool // 启用所有机器人发送消息
+		DisableWeekendPass                 bool // 关闭周末提醒跳过
+		EnableWeekendGreeting              bool // 启用周末问候消息
 	}
 
 	// FeiShu 飞书机器人配置
