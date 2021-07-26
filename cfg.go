@@ -1,8 +1,10 @@
 package main
 
 import (
-	"strings"
+	"bytes"
+	_ "embed"
 
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -12,9 +14,9 @@ type (
 		Timezone  string // eg.Asia/Shanghai
 		Accounts  []*account
 		FeiShu    map[string]*feiShu
-		Msg       *msgTemplate
+		Msg       msgTemplate
 		Push      *push
-		Collector *collectorSetting
+		Collector collectorSetting
 	}
 
 	// account 干饭账号配置
@@ -50,7 +52,8 @@ type (
 
 	// 数据上报
 	collectorSetting struct {
-		Mysql string
+		Enable bool
+		Mysql  string
 	}
 )
 
@@ -62,14 +65,16 @@ var (
 
 var globalCfg = new(cfg)
 
+//go:embed config.yaml.example
+var defaultConfigBytes []byte // 内嵌默认配置文件
+
 func InitCfg() {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("$HOME")
 	viper.AddConfigPath("/etc")
 	if err := viper.ReadInConfig(); err != nil {
-		log.Panic("load config failed", zap.Error(err))
-		return
+		_ = viper.ReadConfig(bytes.NewReader(defaultConfigBytes))
 	}
 	if err := viper.Unmarshal(globalCfg); err != nil {
 		log.Panic("load config failed", zap.Error(err))
@@ -84,6 +89,8 @@ func InitCfg() {
 	} else {
 		globalCfg.Push.init()
 	}
+	bindFlags()
+	filterAccounts()
 
 	// debug print
 	printConfig(globalCfg)
@@ -100,7 +107,7 @@ func printConfig(c *cfg) {
 		log.Info(
 			"account info",
 			zap.String("username", v.Username),
-			zap.String("password", v.Password),
+			//zap.String("password", v.Password),
 			zap.String("webhook", v.FeiShuWebHook),
 			zap.String("robot", v.FeiShuRobot),
 			zap.String("openID", v.OpenID),
@@ -118,19 +125,19 @@ func printConfig(c *cfg) {
 	}
 
 	// 语录
-	log.Sugar().Infof("名字: %s | 午饭: %s | 晚饭: %s | 错过下单时间: %d | 等待下单: %d | 已经下单: %d",
+	log.Sugar().Infof("名字: %s | 午饭: %s | 晚饭: %s | 错过下单时间语录: %d | 等待下单语录: %d | 已经下单语录: %d",
 		c.Msg.AppName, c.Msg.Lunch, c.Msg.Dinner,
 		len(c.Msg.OrderClosed), len(c.Msg.OrderAvailable), len(c.Msg.OrderAvailable))
 
 	// 推送时间设置
-	log.Sugar().Infof("推送时间设置 | 午餐: %s | 晚餐: %s | 预定提醒: %s",
-		strings.Join(c.Push.Lunch, ","),
-		strings.Join(c.Push.Dinner, ","),
-		strings.Join(c.Push.PreOrder, ","),
+	log.Info("推送时间设置",
+		zap.Strings("午餐", c.Push.Lunch),
+		zap.Strings("晚餐", c.Push.Dinner),
+		zap.Strings("预定提醒", c.Push.PreOrder),
 	)
 
 	// 数据上报
-	log.Sugar().Infof("数据上报 | mysql: %s", c.Collector.Mysql)
+	log.Info("数据上报", zap.Bool("是否启用", c.Collector.Enable), zap.String("mysql", c.Collector.Mysql))
 }
 
 func (p *push) init() {
@@ -143,4 +150,54 @@ func (p *push) init() {
 	if len(p.PreOrder) == 0 {
 		p.PreOrder = append(p.PreOrder, pushDefaultPreOrder...)
 	}
+}
+
+// 绑定Flags
+func bindFlags() {
+	const (
+		usernameKey = "username"
+		passwordKey = "password"
+		webhookKey  = "webhook"
+	)
+	pflag.StringP(usernameKey, "u", "", "美餐用户名")
+	pflag.StringP(passwordKey, "p", "", "美餐密码")
+	pflag.StringP(webhookKey, "w", "", "飞书群机器人webhook")
+	pflag.Parse()
+	_ = viper.BindPFlags(pflag.CommandLine)
+	ac := &account{
+		Username:      viper.GetString(usernameKey),
+		Password:      viper.GetString(passwordKey),
+		FeiShuWebHook: viper.GetString(webhookKey),
+	}
+	if ac.Username != "" && ac.Password != "" && ac.FeiShuWebHook != "" {
+		globalCfg.Accounts = append(globalCfg.Accounts, ac)
+		log.Info("Flag加载账号成功",
+			zap.String("username", ac.Username), zap.String("hook", ac.FeiShuWebHook))
+	}
+}
+
+// 避免重复用户
+func filterAccounts() {
+	var (
+		accountMapping = make(map[string]struct{}, len(globalCfg.Accounts))
+		temp           = make([]*account, 0, len(globalCfg.Accounts))
+	)
+	for _, ac := range globalCfg.Accounts {
+		if _, isExist := accountMapping[ac.Username]; isExist {
+			continue
+		}
+		temp = append(temp, &account{
+			Username:              ac.Username,
+			Password:              ac.Password,
+			FeiShuWebHook:         ac.FeiShuWebHook,
+			FeiShuRobot:           ac.FeiShuRobot,
+			OpenID:                ac.OpenID,
+			EnableAllRobot:        ac.EnableAllRobot,
+			EnableWeekendPass:     ac.EnableWeekendPass,
+			EnableWeekendGreeting: ac.EnableWeekendGreeting,
+		})
+		accountMapping[ac.Username] = struct{}{}
+	}
+	globalCfg.Accounts = temp
+	return
 }
