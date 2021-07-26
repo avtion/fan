@@ -1,4 +1,6 @@
 timezone: Asia/Shanghai
+collector:
+    mysql: root:root@tcp(localhost:3306)/test?charset=utf8&parseTime=True&loc=Local
 push:
   lunch:
     - "0 0 8 * * *"
