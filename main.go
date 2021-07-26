@@ -316,7 +316,11 @@ func buildTodayMsg(date string, dishType string, item *CalendarItem) (Msg, error
 			AddAction(NewCardAction(actionTypePrimary, fooTemplate.ExecuteString(map[string]interface{}{
 				"emoji": Picker.Pick(foodEmojis...),
 				"food":  dish.Name,
-			}), "https://www.meican.com/")).
+			}), jumpTemplate.ExecuteString(map[string]interface{}{
+				"DateUnix":   cast.ToString(dayT.Unix()),
+				"UniqueId":   item.UserTab.UniqueId,
+				"TargetTime": cast.ToString(item.TargetTime),
+			}))).
 			AddNotes(Picker.Pick(globalCfg.Msg.OrderSuccess...))
 	default:
 		log.Error("unknown order status", zap.String("status", item.Status))
