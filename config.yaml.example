@@ -1,6 +1,7 @@
 timezone: Asia/Shanghai
 collector:
-    mysql: root:root@tcp(localhost:3306)/test?charset=utf8&parseTime=True&loc=Local
+  enable: false
+  mysql: root:root@tcp(localhost:3306)/test?charset=utf8&parseTime=True&loc=Local
 push:
   lunch:
     - "0 0 8 * * *"
@@ -11,18 +12,18 @@ push:
   preOrder:
     - "0 0 20,21 * * *"
 accounts:
-  - username: ""
-    password: ""
-    feiShuWebHook: ""
-    robotKey: ""
-    openID: ""
-    enableAllRobot: true
-    enableWeekendPass: true
-    enableWeekendGreeting: false
+#  - username: ""
+#    password: ""
+#    feiShuWebHook: ""
+#    robotKey: ""
+#    openID: ""
+#    enableAllRobot: true
+#    enableWeekendPass: true
+#    enableWeekendGreeting: false
 feiShu:
-  AppID: ""
-  AppSecret: ""
-  AccessToken: ""
+#  default:
+#    AppID: ""
+#    AppSecret: ""
 msg:
   appName: "饭酱"
   lunch: "午餐"
