@@ -9,11 +9,12 @@ import (
 
 type (
 	cfg struct {
-		Timezone string // eg.Asia/Shanghai
-		Accounts []*account
-		FeiShu   map[string]*feiShu
-		Msg      *msgTemplate
-		Push     *push
+		Timezone  string // eg.Asia/Shanghai
+		Accounts  []*account
+		FeiShu    map[string]*feiShu
+		Msg       *msgTemplate
+		Push      *push
+		Collector *collectorSetting
 	}
 
 	// account 干饭账号配置
@@ -45,6 +46,11 @@ type (
 		Lunch    []string // 午餐消息
 		Dinner   []string // 晚餐消息
 		PreOrder []string // 预定消息
+	}
+
+	// 数据上报
+	collectorSetting struct {
+		Mysql string
 	}
 )
 
@@ -122,6 +128,9 @@ func printConfig(c *cfg) {
 		strings.Join(c.Push.Dinner, ","),
 		strings.Join(c.Push.PreOrder, ","),
 	)
+
+	// 数据上报
+	log.Sugar().Infof("数据上报 | mysql: %s", c.Collector.Mysql)
 }
 
 func (p *push) init() {
