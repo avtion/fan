@@ -2,8 +2,7 @@ FROM golang:1.16.6-alpine AS dev
 WORKDIR /go/src/app
 COPY . .
 RUN go mod download && go build -o main .
-
-FROM alpine:latest AS deployment
-COPY --from=builder /go/src/app/main .
+FROM alpine:3.14 AS prod
+COPY --from=dev /go/src/app/main .
 ENTRYPOINT ["./main"]
 CMD ["-u", "", "-p", "", "-w", ""]
