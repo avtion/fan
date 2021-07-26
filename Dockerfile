@@ -7,3 +7,4 @@ RUN go install github.com/google/gops@latest
 COPY . .
 RUN go mod download && go build -o main .
 ENTRYPOINT ["./main"]
+CMD ["-u", "", "-p", "", "-w", ""]
