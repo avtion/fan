@@ -1,0 +1,33 @@
+name: Docker Image CI
+
+on:
+  release:
+    type: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 切换分支
+        uses: actions/checkout@v2
+      - name: 初始化多架构模拟器
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: "arm64,amd64"
+      - name: 初始化buildx环境
+        uses: docker/setup-buildx-action@v1
+      - name: 登录DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: 构建镜像并发布
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ secrets.REPO_NAME }}:${{ github.event.release.tag_name }}
+            ${{ secrets.REPO_NAME }}:latest
