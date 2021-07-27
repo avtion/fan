@@ -61,20 +61,22 @@ func main() {
 
 		// 推送午餐消息
 		for _, v := range globalCfg.Push.Lunch {
-			if _, err := schedule.AddFunc(v, func() {
-				// 尝试登录一下
-				if err := api.Login(globalCfg.Accounts[index].Username, globalCfg.Accounts[index].Password); err != nil {
-					log.Error("用户登录失败",
-						zap.Error(err), zap.String("username", globalCfg.Accounts[index].Username))
+			if _, err := schedule.AddFunc(v, func(api *Api, ac *account) func() {
+				return func() {
+					// 尝试登录一下
+					if err := api.Login(ac.Username, ac.Password); err != nil {
+						log.Error("用户登录失败",
+							zap.Error(err), zap.String("username", ac.Username))
+						return
+					}
+					err := pushMsg(ctx, ac, api, carbon.Now(), false, DishTypeLunch)
+					if err != nil {
+						log.Error("午餐消息推送失败", zap.Any("用户", ac), zap.Error(err))
+						return
+					}
 					return
 				}
-				err := pushMsg(ctx, globalCfg.Accounts[index], api, carbon.Now(), false, DishTypeLunch)
-				if err != nil {
-					log.Error("午餐消息推送失败", zap.Any("用户", globalCfg.Accounts[index]), zap.Error(err))
-					return
-				}
-				return
-			}); err != nil {
+			}(api, globalCfg.Accounts[index])); err != nil {
 				log.Error("添加调度任务失败", zap.Error(err), zap.String("调度设置", v))
 				continue
 			}
@@ -82,20 +84,22 @@ func main() {
 
 		// 晚餐消息
 		for _, v := range globalCfg.Push.Dinner {
-			if _, err := schedule.AddFunc(v, func() {
-				// 尝试登录一下
-				if err := api.Login(globalCfg.Accounts[index].Username, globalCfg.Accounts[index].Password); err != nil {
-					log.Error("用户登录失败",
-						zap.Error(err), zap.String("username", globalCfg.Accounts[index].Username))
+			if _, err := schedule.AddFunc(v, func(api *Api, ac *account) func() {
+				return func() {
+					// 尝试登录一下
+					if err := api.Login(ac.Username, ac.Password); err != nil {
+						log.Error("用户登录失败",
+							zap.Error(err), zap.String("username", ac.Username))
+						return
+					}
+					err := pushMsg(ctx, ac, api, carbon.Now(), false, DishTypeDinner)
+					if err != nil {
+						log.Error("晚餐消息推送失败", zap.Any("用户", ac), zap.Error(err))
+						return
+					}
 					return
 				}
-				err := pushMsg(ctx, globalCfg.Accounts[index], api, carbon.Now(), false, DishTypeDinner)
-				if err != nil {
-					log.Error("晚餐消息推送失败", zap.Any("用户", globalCfg.Accounts[index]), zap.Error(err))
-					return
-				}
-				return
-			}); err != nil {
+			}(api, globalCfg.Accounts[index])); err != nil {
 				log.Error("添加调度任务失败", zap.Error(err), zap.String("调度设置", v))
 				continue
 			}
@@ -103,20 +107,22 @@ func main() {
 
 		// 预定提醒消息
 		for _, v := range globalCfg.Push.PreOrder {
-			if _, err := schedule.AddFunc(v, func() {
-				// 尝试登录一下
-				if err := api.Login(globalCfg.Accounts[index].Username, globalCfg.Accounts[index].Password); err != nil {
-					log.Error("用户登录失败",
-						zap.Error(err), zap.String("username", globalCfg.Accounts[index].Username))
+			if _, err := schedule.AddFunc(v, func(api *Api, ac *account) func() {
+				return func() {
+					// 尝试登录一下
+					if err := api.Login(ac.Username, ac.Password); err != nil {
+						log.Error("用户登录失败",
+							zap.Error(err), zap.String("username", ac.Username))
+						return
+					}
+					err := pushMsg(ctx, ac, api, carbon.Tomorrow(), true, DishTypeUndefined)
+					if err != nil {
+						log.Error("预定提醒消息推送失败", zap.Any("用户", ac), zap.Error(err))
+						return
+					}
 					return
 				}
-				err := pushMsg(ctx, globalCfg.Accounts[index], api, carbon.Tomorrow(), true, DishTypeUndefined)
-				if err != nil {
-					log.Error("预定提醒消息推送失败", zap.Any("用户", globalCfg.Accounts[index]), zap.Error(err))
-					return
-				}
-				return
-			}); err != nil {
+			}(api, globalCfg.Accounts[index])); err != nil {
 				log.Error("添加调度任务失败", zap.Error(err), zap.String("调度设置", v))
 				continue
 			}
