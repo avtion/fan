@@ -23,9 +23,10 @@ type (
 	account struct {
 		Username, Password                 string
 		FeiShuWebHook, FeiShuRobot, OpenID string
-		EnableAllRobot                     bool // 启用所有机器人发送消息
-		EnableWeekendPass                  bool // 启用周末提醒跳过
-		EnableWeekendGreeting              bool // 启用周末问候消息
+		EnableAllRobot                     bool     // 启用所有机器人发送消息
+		EnableWeekendPass                  bool     // 启用周末提醒跳过
+		EnableWeekendGreeting              bool     // 启用周末问候消息
+		TitleFilters                       []string // 地址过滤
 	}
 
 	// feiShu 飞书机器人配置
@@ -111,6 +112,7 @@ func printConfig(c *cfg) {
 			zap.String("webhook", v.FeiShuWebHook),
 			zap.String("robot", v.FeiShuRobot),
 			zap.String("openID", v.OpenID),
+			zap.Strings("filters", v.TitleFilters),
 		)
 	}
 
@@ -158,10 +160,18 @@ func bindFlags() {
 		usernameKey = "username"
 		passwordKey = "password"
 		webhookKey  = "webhook"
+
+		// 地址过滤
+		filterNoHangXinKey = "nohx"
+		filterNoGaoZhi     = "nogz"
+		filterNoXingHui    = "noxh"
 	)
 	pflag.StringP(usernameKey, "u", "", "美餐用户名")
 	pflag.StringP(passwordKey, "p", "", "美餐密码")
 	pflag.StringP(webhookKey, "w", "", "飞书群机器人webhook")
+	pflag.Bool(filterNoHangXinKey, false, "排除行信点餐点")
+	pflag.Bool(filterNoGaoZhi, false, "排除高志点餐点")
+	pflag.Bool(filterNoXingHui, false, "排除星辉点餐点")
 	pflag.Parse()
 	_ = viper.BindPFlags(pflag.CommandLine)
 	ac := &account{
@@ -173,6 +183,17 @@ func bindFlags() {
 		globalCfg.Accounts = append(globalCfg.Accounts, ac)
 		log.Info("Flag加载账号成功",
 			zap.String("username", ac.Username), zap.String("hook", ac.FeiShuWebHook))
+	}
+
+	// 地点过滤
+	if viper.GetBool(filterNoHangXinKey) {
+		ac.TitleFilters = append(ac.TitleFilters, titleFilterHangXin)
+	}
+	if viper.GetBool(filterNoGaoZhi) {
+		ac.TitleFilters = append(ac.TitleFilters, titleFilterGaoZhi)
+	}
+	if viper.GetBool(filterNoXingHui) {
+		ac.TitleFilters = append(ac.TitleFilters, titleFilterXingHui)
 	}
 }
 
@@ -195,9 +216,20 @@ func filterAccounts() {
 			EnableAllRobot:        ac.EnableAllRobot,
 			EnableWeekendPass:     ac.EnableWeekendPass,
 			EnableWeekendGreeting: ac.EnableWeekendGreeting,
+			TitleFilters:          ac.TitleFilters,
 		})
 		accountMapping[ac.Username] = struct{}{}
 	}
 	globalCfg.Accounts = temp
 	return
 }
+
+//————————————————
+// 地址过滤
+//————————————————
+
+const (
+	titleFilterHangXin = "行信"
+	titleFilterXingHui = "星辉"
+	titleFilterGaoZhi  = "高志"
+)

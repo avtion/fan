@@ -173,16 +173,18 @@ func pushMsg(ctx context.Context, account *account, api *Api, day carbon.Carbon,
 	switch isPreOrder {
 	case true:
 		// 预定订单
-		msg, err = buildPreOrderMsg(dateItem)
+		msg, err = buildPreOrderMsg(account, dateItem)
 	case false:
 		// 非预定订单
 		switch lunchOrDinner {
 		case DishTypeLunch:
 			// 午餐
-			msg, err = buildTodayMsg(dateItem.Date, globalCfg.Msg.Lunch, dateItem.CalendarItemList[0])
+			msg, err = buildTodayMsg(dateItem.Date, globalCfg.Msg.Lunch,
+				GetCalendarItemByTitle(dateItem.CalendarItemList, KeyWordLunch, account.TitleFilters...))
 		case DishTypeDinner:
 			// 晚餐
-			msg, err = buildTodayMsg(dateItem.Date, globalCfg.Msg.Dinner, dateItem.CalendarItemList[1])
+			msg, err = buildTodayMsg(dateItem.Date, globalCfg.Msg.Dinner,
+				GetCalendarItemByTitle(dateItem.CalendarItemList, KeyWordDinner, account.TitleFilters...))
 		}
 	}
 	if err != nil {
@@ -208,10 +210,21 @@ func pushMsg(ctx context.Context, account *account, api *Api, day carbon.Carbon,
 }
 
 // 第二天的推送消息
-func buildPreOrderMsg(item *DateItem) (Msg, error) {
-	lunch, dinner := item.CalendarItemList[0], item.CalendarItemList[1]
+func buildPreOrderMsg(account *account, item *DateItem) (Msg, error) {
+	if item == nil {
+		return nil, nil
+	}
+
+	// 获取午餐和晚餐对象
+	lunch, dinner := GetCalendarItemByTitle(item.CalendarItemList, KeyWordLunch, account.TitleFilters...),
+		GetCalendarItemByTitle(item.CalendarItemList, KeyWordDinner, account.TitleFilters...)
+	if lunch == nil && dinner == nil {
+		return nil, nil
+	}
+
 	// 如果不需要订餐就没有提醒了吧
-	if lunch.Status != OrderStatusAvailable && dinner.Status != OrderStatusAvailable {
+	if lunch != nil && dinner != nil &&
+		lunch.Status != OrderStatusAvailable && dinner.Status != OrderStatusAvailable {
 		return nil, nil
 	}
 
@@ -224,45 +237,59 @@ func buildPreOrderMsg(item *DateItem) (Msg, error) {
 		fasttemplate.New("{{emoji}} 主人&sim;明天是 **{{day}}** 啦！", "{{", "}}").ExecuteString(
 			map[string]interface{}{"emoji": Picker.Pick(loveEmojis...), "day": weekdayStr}))
 
-	var isNeedToOrder bool // 用来加备注模块信息的
+	var (
+		isNeedToOrder bool // 用来加备注模块信息的
+		hasMsg        bool
+	)
+
 	// 追加午餐信息
-	switch lunch.Status {
-	case OrderStatusOrder:
-		msg.AddContents(fasttemplate.New(
-			"明天的午餐是 {{emoji}} **{{food}}**", "{{", "}}").
-			ExecuteString(map[string]interface{}{
-				"emoji": Picker.Pick(foodEmojis...),
-				"food":  GetDish(lunch.CorpOrderUser).Name,
-			}))
-	case OrderStatusAvailable:
-		msg.AddContents("主人是不是忘记点明天的**午餐**……了？").
-			AddAction(NewCardAction(actionTypePrimary, "别拉我，我要点午餐！",
-				jumpTemplate.ExecuteString(map[string]interface{}{
-					"DateUnix":   cast.ToString(dayT.Unix()),
-					"UniqueId":   lunch.UserTab.UniqueId,
-					"TargetTime": cast.ToString(lunch.TargetTime),
-				})))
-		isNeedToOrder = true
+	if lunch != nil {
+		hasMsg = true
+		switch lunch.Status {
+		case OrderStatusOrder:
+			msg.AddContents(fasttemplate.New(
+				"明天的午餐是 {{emoji}} **{{food}}**", "{{", "}}").
+				ExecuteString(map[string]interface{}{
+					"emoji": Picker.Pick(foodEmojis...),
+					"food":  GetDish(lunch.CorpOrderUser).Name,
+				}))
+		case OrderStatusAvailable:
+			msg.AddContents("主人是不是忘记点明天的**午餐**……了？").
+				AddAction(NewCardAction(actionTypePrimary, "别拉我，我要点午餐！",
+					jumpTemplate.ExecuteString(map[string]interface{}{
+						"DateUnix":   cast.ToString(dayT.Unix()),
+						"UniqueId":   lunch.UserTab.UniqueId,
+						"TargetTime": cast.ToString(lunch.TargetTime),
+					})))
+			isNeedToOrder = true
+		}
 	}
 
 	// 追加晚餐信息
-	switch dinner.Status {
-	case OrderStatusOrder:
-		msg.AddContents(fasttemplate.New(
-			"明天的晚餐是 {{emoji}} **{{food}}**", "{{", "}}").
-			ExecuteString(map[string]interface{}{
-				"emoji": Picker.Pick(foodEmojis...),
-				"food":  GetDish(dinner.CorpOrderUser).Name,
-			}))
-	case OrderStatusAvailable:
-		msg.AddContents("主人是不是忘记点明天的**晚餐**……了？").
-			AddAction(NewCardAction(actionTypePrimary, "那个……很抱歉，我马上点晚餐",
-				jumpTemplate.ExecuteString(map[string]interface{}{
-					"DateUnix":   cast.ToString(dayT.Unix()),
-					"UniqueId":   dinner.UserTab.UniqueId,
-					"TargetTime": cast.ToString(dinner.TargetTime),
-				})))
-		isNeedToOrder = true
+	if dinner != nil {
+		hasMsg = true
+		switch dinner.Status {
+		case OrderStatusOrder:
+			msg.AddContents(fasttemplate.New(
+				"明天的晚餐是 {{emoji}} **{{food}}**", "{{", "}}").
+				ExecuteString(map[string]interface{}{
+					"emoji": Picker.Pick(foodEmojis...),
+					"food":  GetDish(dinner.CorpOrderUser).Name,
+				}))
+		case OrderStatusAvailable:
+			msg.AddContents("主人是不是忘记点明天的**晚餐**……了？").
+				AddAction(NewCardAction(actionTypePrimary, "那个……很抱歉，我马上点晚餐",
+					jumpTemplate.ExecuteString(map[string]interface{}{
+						"DateUnix":   cast.ToString(dayT.Unix()),
+						"UniqueId":   dinner.UserTab.UniqueId,
+						"TargetTime": cast.ToString(dinner.TargetTime),
+					})))
+			isNeedToOrder = true
+		}
+	}
+
+	if !hasMsg {
+		return nil, nil
 	}
 
 	if isNeedToOrder {
@@ -275,6 +302,10 @@ func buildPreOrderMsg(item *DateItem) (Msg, error) {
 
 // 当天的推送消息
 func buildTodayMsg(date string, dishType string, item *CalendarItem) (Msg, error) {
+	if item == nil {
+		return nil, errors.New("item is nil")
+	}
+
 	var (
 		msg Msg
 		err error

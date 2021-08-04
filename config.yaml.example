@@ -20,6 +20,9 @@ accounts:
 #    enableAllRobot: true
 #    enableWeekendPass: true
 #    enableWeekendGreeting: false
+#    titleFilters:
+#      - "高志"
+#      - "行信"
 feiShu:
 #  default:
 #    AppID: ""
