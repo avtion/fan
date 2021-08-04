@@ -2,24 +2,9 @@ package main
 
 import (
 	"math/rand"
+	"strings"
 	"time"
-	"unsafe"
 )
-
-// StringToBytes converts string to byte slice without a memory allocation.
-func StringToBytes(s string) []byte {
-	return *(*[]byte)(unsafe.Pointer(
-		&struct {
-			string
-			Cap int
-		}{s, len(s)},
-	))
-}
-
-// BytesToString converts byte slice to string without a memory allocation.
-func BytesToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
 
 type StringsPicker struct {
 	ownRand *rand.Rand
@@ -60,3 +45,38 @@ func GetWeekStr(dayOfWeek int) string {
 	}
 	return ""
 }
+
+// GetCalendarItemByTitle 过滤掉不需要的Title地址
+func GetCalendarItemByTitle(list []*CalendarItem, keyWord KeyWord, filters ...string) *CalendarItem {
+	if keyWord == "" {
+		return nil
+	}
+	for _, v := range list {
+		if item := func() *CalendarItem {
+			// 先排除过滤条件
+			for _, filter := range filters {
+				if strings.Contains(v.Title, filter) {
+					return nil
+				}
+			}
+			// 再找一下有没有对应关键字的
+			if strings.Contains(v.Title, keyWord) {
+				return v
+			}
+			return nil
+		}(); item != nil {
+			// 不为空就认为是找到了
+			return item
+		}
+	}
+	return nil
+}
+
+type KeyWord = string
+
+const (
+	KeyWordLunch  KeyWord = "午"
+	KeyWordDinner         = "晚"
+)
+
+var _ = []KeyWord{KeyWordLunch, KeyWordDinner}
